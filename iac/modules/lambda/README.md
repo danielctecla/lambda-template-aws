@@ -17,7 +17,7 @@ module "lambda_python" {
 
   function_name = "my-app-python"
   source_dir    = "${path.root}/../../../src/python"
-  runtime       = "python3.13"
+  runtime       = "python3.14"
   handler       = "handler.lambda_handler"
 
   # Optional

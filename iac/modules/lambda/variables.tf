@@ -9,7 +9,7 @@ variable "source_dir" {
 }
 
 variable "runtime" {
-  description = "Lambda runtime, e.g. python3.13 or nodejs22.x."
+  description = "Lambda runtime, e.g. python3.14 or nodejs24.x."
   type        = string
 }
 
