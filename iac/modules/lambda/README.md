@@ -24,7 +24,7 @@ module "lambda_python" {
   memory_size            = 256
   timeout                = 15
   environment_variables  = { LOG_LEVEL = "INFO" }
-  api_gateway_source_arn = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+  api_gateway_source_arn = "${module.api_gateway.execution_arn}/*/*"
 }
 ```
 

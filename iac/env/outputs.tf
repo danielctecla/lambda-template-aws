@@ -21,3 +21,15 @@ output "nodejs_function_arn" {
 output "nodejs_invoke_arn" {
   value = module.lambda_nodejs.invoke_arn
 }
+
+output "api_invoke_url" {
+  value = module.api_gateway.invoke_url
+}
+
+output "python_url" {
+  value = "${module.api_gateway.invoke_url}/python"
+}
+
+output "nodejs_url" {
+  value = "${module.api_gateway.invoke_url}/nodejs"
+}
