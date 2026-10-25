@@ -26,9 +26,9 @@ provider "aws" {
   }
 
   default_tags {
-    tags = {
+    tags = merge(var.tags, {
       Project   = var.project_name
       ManagedBy = "terraform"
-    }
+    })
   }
 }

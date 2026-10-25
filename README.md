@@ -18,12 +18,51 @@ iac/modules/     Reusable modules (lambda/, api_gateway/)
 scripts/         Helper scripts (destroy.sh)
 ```
 
+## Configuration
+
+Everything you'd normally change is in `iac/env/terraform.tfvars`:
+
+| Setting | What it controls |
+|---------|------------------|
+| `project_name` | Prefix of every resource name |
+| `aws_region` | Region to deploy to |
+| `tags` | Extra tags on every resource |
+| `api` | API `name` (default `project_name`), `description` and `stage_name` (part of the URL) |
+| `lambdas` | One entry per function, see below |
+
+Each key in `lambdas` is deployed as `<project_name>-<key>`, exposed at `GET /<key>` by default:
+
+```hcl
+lambdas = {
+  orders = {
+    source_dir = "orders"          # folder under src/
+    runtime    = "python3.14"
+    handler    = "handler.lambda_handler"
+
+    # Optional (defaults shown)
+    description           = ""
+    memory_size           = 128
+    timeout               = 10
+    architectures         = ["x86_64"]
+    environment_variables = {}
+    log_retention_days    = 14
+    expose                = true     # false = not reachable through the API
+    route_path            = "orders" # default: the key
+    http_method           = "GET"
+  }
+}
+```
+
+To add a function, create its folder in `src/` and add an entry. To rename one, change its key; Terraform will replace it.
+
+Function names are always prefixed with `project_name`, because the deploy role's permissions are scoped to `<project_name>-*`. If you change `project_name` or `aws_region`, set the same values in `iac/bootstrap/terraform.tfvars` and re-apply the bootstrap.
+
 ## What gets created
 
 | Stack | Resources |
 |-------|-----------|
 | `iac/bootstrap` | `<project>-deployer` IAM role and policy, `<project>-boundary` permissions boundary |
-| `iac/env` | 2 Lambda functions with their IAM roles, policies and CloudWatch log groups, and a REST API with `/python` and `/nodejs` routes |
+| `iac/env` | One Lambda function per `lambdas` entry, with its IAM role, policy and CloudWatch log group, and a REST API with a route per exposed function |
 
 No S3 bucket is created. Terraform state is stored locally (`terraform.tfstate` in each stack folder) and the Lambda code is zipped locally and uploaded directly to Lambda. To use a remote S3 backend, see `iac/env/backend.tf`; that bucket is not managed by this template.
 
@@ -97,7 +136,7 @@ aws sso login --profile lambda-template
 export AWS_PROFILE=lambda-template
 ```
 
-1. Edit your code in `src/` and set your project name in `iac/env/terraform.tfvars`.
+1. Edit your code in `src/` and your settings in `iac/env/terraform.tfvars`.
 2. Set the same `project_name` and `aws_region` in `iac/bootstrap/terraform.tfvars`.
 3. Create the deploy role (once):
 
@@ -128,8 +167,8 @@ export AWS_PROFILE=lambda-template
 6. Test the endpoints:
 
    ```bash
-   curl "$(terraform output -raw python_url)"
-   curl "$(terraform output -raw nodejs_url)"
+   terraform output urls          # URL of each exposed function
+   curl "$(terraform output -raw api_invoke_url)/python"
    ```
 
 If `terraform apply` in `iac/env` fails with `AccessDenied`, the deploy role is missing a permission. Add the action to the deploy policy in `iac/bootstrap/main.tf` and re-run `terraform apply` in `iac/bootstrap`.

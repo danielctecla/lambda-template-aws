@@ -1,35 +1,19 @@
-output "python_function_name" {
-  value = module.lambda_python.function_name
+output "function_names" {
+  description = "Lambda function names, by key."
+  value       = { for k, m in module.lambda : k => m.function_name }
 }
 
-output "python_function_arn" {
-  value = module.lambda_python.function_arn
-}
-
-output "python_invoke_arn" {
-  value = module.lambda_python.invoke_arn
-}
-
-output "nodejs_function_name" {
-  value = module.lambda_nodejs.function_name
-}
-
-output "nodejs_function_arn" {
-  value = module.lambda_nodejs.function_arn
-}
-
-output "nodejs_invoke_arn" {
-  value = module.lambda_nodejs.invoke_arn
+output "function_arns" {
+  description = "Lambda function ARNs, by key."
+  value       = { for k, m in module.lambda : k => m.function_arn }
 }
 
 output "api_invoke_url" {
-  value = module.api_gateway.invoke_url
+  description = "Base URL of the API stage."
+  value       = module.api_gateway.invoke_url
 }
 
-output "python_url" {
-  value = "${module.api_gateway.invoke_url}/python"
-}
-
-output "nodejs_url" {
-  value = "${module.api_gateway.invoke_url}/nodejs"
+output "urls" {
+  description = "Full URL of each exposed function, by route path."
+  value       = { for path, _ in local.routes : path => "${module.api_gateway.invoke_url}/${path}" }
 }
