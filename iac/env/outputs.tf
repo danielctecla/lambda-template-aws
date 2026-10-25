@@ -1,6 +1,6 @@
-output "function_names" {
-  description = "Lambda function names, by key."
-  value       = { for k, m in module.lambda : k => m.function_name }
+output "api_invoke_url" {
+  description = "Base URL of the API stage."
+  value       = module.api_gateway.invoke_url
 }
 
 output "function_arns" {
@@ -8,9 +8,9 @@ output "function_arns" {
   value       = { for k, m in module.lambda : k => m.function_arn }
 }
 
-output "api_invoke_url" {
-  description = "Base URL of the API stage."
-  value       = module.api_gateway.invoke_url
+output "function_names" {
+  description = "Lambda function names, by key."
+  value       = { for k, m in module.lambda : k => m.function_name }
 }
 
 output "urls" {

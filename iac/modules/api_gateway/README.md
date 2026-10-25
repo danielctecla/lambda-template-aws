@@ -5,7 +5,8 @@ REST API (API Gateway v1) that proxies routes to Lambda functions. It creates:
 - REST API (regional endpoint)
 - One resource, method and Lambda proxy integration (`AWS_PROXY`) per route
 - Deployment, redeployed automatically when routes change
-- Stage
+- Stage, with X-Ray tracing enabled by default
+- Throttling for every method of the stage (5 requests per second, burst of 10, by default)
 
 It does not create the Lambda invoke permission. Pass `execution_arn` to the Lambda module's `api_gateway_source_arn` instead.
 
@@ -38,6 +39,9 @@ module "lambda_python" {
 | routes | map(object({ http_method = optional(string, "GET"), lambda_invoke_arn = string })) | - | yes |
 | description | string | `""` | no |
 | stage_name | string | `"v1"` | no |
+| throttling_rate_limit | number | `5` | no |
+| throttling_burst_limit | number | `10` | no |
+| xray_tracing_enabled | bool | `true` | no |
 | tags | map(string) | `{}` | no |
 
 ## Outputs

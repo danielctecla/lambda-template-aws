@@ -1,15 +1,3 @@
-locals {
-  src_dir = "${path.root}/../../src"
-
-  # Functions exposed through the API, keyed by route path
-  routes = {
-    for k, l in var.lambdas : coalesce(l.route_path, k) => {
-      http_method       = l.http_method
-      lambda_invoke_arn = module.lambda[k].invoke_arn
-    } if l.expose
-  }
-}
-
 module "lambda" {
   source   = "../modules/lambda"
   for_each = var.lambdas
@@ -24,6 +12,7 @@ module "lambda" {
   architectures          = each.value.architectures
   environment_variables  = each.value.environment_variables
   log_retention_days     = each.value.log_retention_days
+  tracing_mode           = each.value.tracing_mode
   api_gateway_source_arn = each.value.expose ? "${module.api_gateway.execution_arn}/*/*" : null
   permissions_boundary   = var.permissions_boundary_arn
 }
@@ -31,8 +20,11 @@ module "lambda" {
 module "api_gateway" {
   source = "../modules/api_gateway"
 
-  api_name    = coalesce(var.api.name, var.project_name)
-  description = coalesce(var.api.description, "REST API for ${var.project_name}")
-  stage_name  = var.api.stage_name
-  routes      = local.routes
+  api_name               = coalesce(var.api.name, var.project_name)
+  description            = coalesce(var.api.description, "REST API for ${var.project_name}")
+  stage_name             = var.api.stage_name
+  throttling_rate_limit  = var.api.throttling_rate_limit
+  throttling_burst_limit = var.api.throttling_burst_limit
+  xray_tracing_enabled   = var.api.xray_tracing_enabled
+  routes                 = local.routes
 }

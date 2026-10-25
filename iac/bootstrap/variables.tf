@@ -4,9 +4,21 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "max_session_duration" {
+  description = "Maximum session duration in seconds for the deploy role. When assumed from an SSO session (role chaining), AWS caps it at 3600."
+  type        = number
+  default     = 3600
+}
+
 variable "project_name" {
   description = "Project name. Must match project_name in iac/env, since permissions are scoped by this prefix."
   type        = string
+}
+
+variable "require_mfa" {
+  description = "Require MFA for trusted_principal_arns. Not needed for SSO, which enforces MFA at sign-in (and doesn't pass it on to chained roles)."
+  type        = bool
+  default     = false
 }
 
 variable "sso_permission_sets" {
@@ -19,16 +31,4 @@ variable "trusted_principal_arns" {
   description = "IAM user or role ARNs allowed to assume the deploy role. Prefer sso_permission_sets: IAM users need long-lived access keys."
   type        = list(string)
   default     = []
-}
-
-variable "require_mfa" {
-  description = "Require MFA for trusted_principal_arns. Not needed for SSO, which enforces MFA at sign-in (and doesn't pass it on to chained roles)."
-  type        = bool
-  default     = false
-}
-
-variable "max_session_duration" {
-  description = "Maximum session duration in seconds for the deploy role. When assumed from an SSO session (role chaining), AWS caps it at 3600."
-  type        = number
-  default     = 3600
 }

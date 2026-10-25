@@ -4,7 +4,7 @@ Run once, logged in with your IAM Identity Center (SSO) profile, before deployin
 
 - `<project>-deployer`: IAM role Terraform assumes to deploy. Short-lived STS credentials, no access keys. Trusted by SSO permission sets and/or IAM principals, see below.
 - `<project>-deployer` policy: only what `iac/env` needs (Lambda, API Gateway, logs and IAM roles/policies named `<project>-*`), scoped to one region.
-- `<project>-boundary`: permissions boundary every Lambda role must have, so the deploy role can't create functions with more than log permissions.
+- `<project>-boundary`: permissions boundary every Lambda role must have, so the deploy role can't create functions that do more than write logs and send X-Ray traces.
 
 The deploy role can't edit itself, its policy or the boundary.
 

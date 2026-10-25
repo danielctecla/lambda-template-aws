@@ -4,7 +4,7 @@ Terraform template to deploy AWS Lambda functions (Python and Node.js examples) 
 
 ## Requirements
 
-- Terraform >= 1.5
+- Terraform >= 1.16
 - AWS CLI v2
 - An IAM Identity Center (SSO) user with admin access to the account, see [Credentials](#credentials)
 
@@ -27,7 +27,7 @@ Everything you'd normally change is in `iac/env/terraform.tfvars`:
 | `project_name` | Prefix of every resource name |
 | `aws_region` | Region to deploy to |
 | `tags` | Extra tags on every resource |
-| `api` | API `name` (default `project_name`), `description` and `stage_name` (part of the URL) |
+| `api` | API `name` (default `project_name`), `description`, `stage_name` (part of the URL), throttling (`throttling_rate_limit` requests per second, default 5, and `throttling_burst_limit`, default 10) and `xray_tracing_enabled` (default `true`) |
 | `lambdas` | One entry per function, see below |
 
 Each key in `lambdas` is deployed as `<project_name>-<key>`, exposed at `GET /<key>` by default:
@@ -46,6 +46,7 @@ lambdas = {
     architectures         = ["x86_64"]
     environment_variables = {}
     log_retention_days    = 14
+    tracing_mode          = "Active"   # X-Ray: "Active" or "PassThrough"
     expose                = true     # false = not reachable through the API
     route_path            = "orders" # default: the key
     http_method           = "GET"
@@ -68,6 +69,19 @@ No S3 bucket is created. Terraform state is stored locally (`terraform.tfstate` 
 
 Everything is deployed to `aws_region` (default `us-east-1`), not to your AWS CLI default region.
 
+## Cost
+
+Built to stay within the AWS Free Tier for personal use. No KMS keys or other resources with a fixed monthly price are created.
+
+| Service | Free Tier |
+|---------|-----------|
+| Lambda | Always free: 1M requests and 400,000 GB-seconds per month |
+| CloudWatch Logs, X-Ray | Always free monthly allowances, far above what testing uses |
+| IAM | Free |
+| API Gateway (REST) | Free for the first 12 months on the legacy Free Tier (1M calls per month), or paid from credits on the Free plan. After that, about $3.50 per million calls |
+
+Free Tier allowances are per account, shared with anything else running in it. Throttling (5 requests per second by default) limits how fast a flood of requests can add cost. Create a **zero spend budget** in **Billing → Budgets** to get an email as soon as anything is charged, and check **Billing → Free Tier** for what your account has left.
+
 ## Credentials
 
 No long-lived access keys are used. There are two layers:
@@ -75,7 +89,7 @@ No long-lived access keys are used. There are two layers:
 1. **You sign in with IAM Identity Center (SSO).** `aws sso login` opens the browser, asks for your password and MFA, and gives the CLI temporary credentials that expire after a few hours.
 2. **Terraform assumes the `<project>-deployer` role** from that session (created by `iac/bootstrap`), so the deploy itself runs with least privilege:
    - The role can only manage resources named `<project>-*`, in one region. API Gateway is the exception: its resources can't be scoped by name, so it is scoped to the whole region.
-   - Every Lambda role must have the `<project>-boundary` permissions boundary, so a function can never do more than write its own logs.
+   - Every Lambda role must have the `<project>-boundary` permissions boundary, so a function can never do more than write its own logs and send X-Ray traces.
    - The role can't modify itself, its policy or the boundary.
 
 ### 1. Set up IAM Identity Center (once, in the AWS console)

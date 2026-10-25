@@ -3,10 +3,10 @@
 General-purpose AWS Lambda module. It creates:
 
 - IAM role assumed by Lambda
-- IAM policy with basic permissions (write logs to its own log group), attached to the role
+- IAM policy with basic permissions (write logs to its own log group, send X-Ray traces when `tracing_mode = "Active"`), attached to the role
 - CloudWatch log group with retention
 - Zip of `source_dir` (via `archive_file`)
-- Lambda function
+- Lambda function, with X-Ray tracing (`Active` by default)
 - Optional `aws_lambda_permission` so API Gateway can invoke the function
 
 ## Usage
@@ -44,6 +44,7 @@ Need more permissions (S3, DynamoDB, ...)? Attach extra policies to the `role_na
 | architectures | list(string) | `["x86_64"]` | no |
 | environment_variables | map(string) | `{}` | no |
 | log_retention_days | number | `14` | no |
+| tracing_mode | string | `"Active"` | no |
 | api_gateway_source_arn | string | `null` | no |
 | permissions_boundary | string | `null` | no |
 | tags | map(string) | `{}` | no |

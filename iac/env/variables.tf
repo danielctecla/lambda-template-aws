@@ -1,28 +1,26 @@
+variable "api" {
+  description = "REST API settings. name defaults to project_name. Throttling applies to every route of the stage."
+  type = object({
+    name                   = optional(string)
+    description            = optional(string)
+    stage_name             = optional(string, "v1")
+    throttling_rate_limit  = optional(number, 5)
+    throttling_burst_limit = optional(number, 10)
+    xray_tracing_enabled   = optional(bool, true)
+  })
+  default = {}
+}
+
 variable "aws_region" {
   description = "AWS region where resources are deployed."
   type        = string
   default     = "us-east-1"
 }
 
-variable "project_name" {
-  description = "Project name, used as prefix for resource names."
+variable "deploy_role_arn" {
+  description = "IAM role Terraform assumes to deploy (output of iac/bootstrap). If null, your current AWS credentials are used directly."
   type        = string
-}
-
-variable "tags" {
-  description = "Extra tags applied to all resources, on top of Project and ManagedBy."
-  type        = map(string)
-  default     = {}
-}
-
-variable "api" {
-  description = "REST API settings. name defaults to project_name."
-  type = object({
-    name        = optional(string)
-    description = optional(string)
-    stage_name  = optional(string, "v1")
-  })
-  default = {}
+  default     = null
 }
 
 variable "lambdas" {
@@ -37,6 +35,7 @@ variable "lambdas" {
     architectures         = optional(list(string), ["x86_64"])
     environment_variables = optional(map(string), {})
     log_retention_days    = optional(number, 14)
+    tracing_mode          = optional(string, "Active")
     expose                = optional(bool, true)
     route_path            = optional(string)
     http_method           = optional(string, "GET")
@@ -58,14 +57,19 @@ variable "lambdas" {
   }
 }
 
-variable "deploy_role_arn" {
-  description = "IAM role Terraform assumes to deploy (output of iac/bootstrap). If null, your current AWS credentials are used directly."
-  type        = string
-  default     = null
-}
-
 variable "permissions_boundary_arn" {
   description = "Permissions boundary set on the Lambda roles (output of iac/bootstrap). Required when deploying with deploy_role_arn."
   type        = string
   default     = null
+}
+
+variable "project_name" {
+  description = "Project name, used as prefix for resource names."
+  type        = string
+}
+
+variable "tags" {
+  description = "Extra tags applied to all resources, on top of Project and ManagedBy."
+  type        = map(string)
+  default     = {}
 }

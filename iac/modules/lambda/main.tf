@@ -18,8 +18,8 @@ resource "aws_iam_role" "lambda" {
   tags                 = var.tags
 }
 
-# 2. IAM policy: basic permissions to write logs to its own log group
-data "aws_iam_policy_document" "lambda_logging" {
+# 2. IAM policy: write logs to its own log group and, when tracing, send traces to X-Ray
+data "aws_iam_policy_document" "lambda_execution" {
   statement {
     effect = "Allow"
     actions = [
@@ -28,12 +28,25 @@ data "aws_iam_policy_document" "lambda_logging" {
     ]
     resources = ["${aws_cloudwatch_log_group.lambda.arn}:*"]
   }
+
+  # X-Ray doesn't support resource-level permissions
+  dynamic "statement" {
+    for_each = var.tracing_mode == "Active" ? [1] : []
+    content {
+      effect = "Allow"
+      actions = [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+      ]
+      resources = ["*"]
+    }
+  }
 }
 
 resource "aws_iam_policy" "lambda" {
   name        = "${var.function_name}-policy"
   description = "Basic execution policy for ${var.function_name}"
-  policy      = data.aws_iam_policy_document.lambda_logging.json
+  policy      = data.aws_iam_policy_document.lambda_execution.json
   tags        = var.tags
 }
 
@@ -58,7 +71,7 @@ data "archive_file" "lambda_zip" {
 }
 
 # 6. Lambda function
-resource "aws_lambda_function" "this" {
+resource "aws_lambda_function" "main" {
   function_name    = var.function_name
   description      = var.description
   role             = aws_iam_role.lambda.arn
@@ -69,6 +82,7 @@ resource "aws_lambda_function" "this" {
   architectures    = var.architectures
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  tags             = var.tags
 
   dynamic "environment" {
     for_each = length(var.environment_variables) > 0 ? [1] : []
@@ -82,7 +96,9 @@ resource "aws_lambda_function" "this" {
     log_group  = aws_cloudwatch_log_group.lambda.name
   }
 
-  tags = var.tags
+  tracing_config {
+    mode = var.tracing_mode
+  }
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda,
@@ -96,7 +112,7 @@ resource "aws_lambda_permission" "api_gateway" {
 
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.this.function_name
+  function_name = aws_lambda_function.main.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = var.api_gateway_source_arn
 }
