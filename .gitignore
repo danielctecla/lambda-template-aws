@@ -15,3 +15,8 @@ terraform.rc
 # Lambda build artifacts
 *.zip
 .build/
+
+# Local credentials / account-specific values
+*.auto.tfvars
+!*.auto.tfvars.example
+.claude/settings.local.json

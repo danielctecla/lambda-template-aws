@@ -12,9 +12,10 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "lambda" {
-  name               = "${var.function_name}-role"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
-  tags               = var.tags
+  name                 = "${var.function_name}-role"
+  assume_role_policy   = data.aws_iam_policy_document.assume_role.json
+  permissions_boundary = var.permissions_boundary
+  tags                 = var.tags
 }
 
 # 2. IAM policy: basic permissions to write logs to its own log group

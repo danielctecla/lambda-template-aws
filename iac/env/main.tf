@@ -11,6 +11,7 @@ module "lambda_python" {
   runtime                = "python3.14"
   handler                = "handler.lambda_handler"
   api_gateway_source_arn = "${module.api_gateway.execution_arn}/*/*"
+  permissions_boundary   = var.permissions_boundary_arn
 }
 
 module "lambda_nodejs" {
@@ -22,6 +23,7 @@ module "lambda_nodejs" {
   runtime                = "nodejs24.x"
   handler                = "index.handler"
   api_gateway_source_arn = "${module.api_gateway.execution_arn}/*/*"
+  permissions_boundary   = var.permissions_boundary_arn
 }
 
 module "api_gateway" {

@@ -60,6 +60,12 @@ variable "api_gateway_source_arn" {
   default     = null
 }
 
+variable "permissions_boundary" {
+  description = "ARN of the IAM policy used as permissions boundary for the role. If null, no boundary is set."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Tags applied to all resources of the module."
   type        = map(string)

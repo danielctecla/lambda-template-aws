@@ -45,6 +45,7 @@ Need more permissions (S3, DynamoDB, ...)? Attach extra policies to the `role_na
 | environment_variables | map(string) | `{}` | no |
 | log_retention_days | number | `14` | no |
 | api_gateway_source_arn | string | `null` | no |
+| permissions_boundary | string | `null` | no |
 | tags | map(string) | `{}` | no |
 
 ## Outputs
