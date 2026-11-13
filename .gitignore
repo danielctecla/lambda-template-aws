@@ -20,3 +20,7 @@ terraform.rc
 *.auto.tfvars
 !*.auto.tfvars.example
 .claude/settings.local.json
+
+# Python
+__pycache__/
+.pytest_cache/
