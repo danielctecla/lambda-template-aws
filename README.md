@@ -70,6 +70,15 @@ terraform -chdir=iac/env output urls
 
 Terraform state is stored locally in each stack folder (no S3), so don't delete it while resources exist. `AccessDenied` on apply means the deploy role lacks a permission: add it in `iac/bootstrap/main.tf` and apply the bootstrap again.
 
+## Tests
+
+Handler tests run in GitHub Actions on every push to `main` and every pull request. To run them locally:
+
+```bash
+pip install pytest && pytest tests/python
+node --test "tests/nodejs/**/*.test.mjs"
+```
+
 ## Teardown
 
 ```bash
